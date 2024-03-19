@@ -44,6 +44,6 @@ jobs:
         with:
           push: true
           tags: |
-            yourusername/yourappname:latest
-            yourusername/yourappname:${{ env.VERSION }}
+            chickennight/pants-be:latest
+            chickennight/pants-be:${{ env.VERSION }}
         if: env.VERSION
