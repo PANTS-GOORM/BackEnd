@@ -29,7 +29,7 @@ jobs:
       - name: Set Secrets YML
         run: |
           mkdir -p src/main/resources
-          cp application-properties-secrets.yml src/main/resources/application-properties-secrets.yml
+          cp external_files/application-properties-secrets.yml src/main/resources/application-properties-secrets.yml
 
       - name: Gradle Caching
         uses: actions/cache@v3
