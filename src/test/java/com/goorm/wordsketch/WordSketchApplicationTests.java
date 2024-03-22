@@ -1,10 +1,7 @@
 package com.goorm.wordsketch;
 
-//@SpringBootTest
-//class WordSketchApplicationTests {
-//
-//	@Test
-//	void contextLoads() {
-//	}
-//
-//}
+import org.springframework.boot.test.context.SpringBootTest;
+
+@SpringBootTest
+class WordSketchApplicationTests {
+}
