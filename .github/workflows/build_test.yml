@@ -23,14 +23,14 @@ jobs:
       - name: Checkout private repo
         uses: actions/checkout@v4
         with:
-          repository: "PANTS-GOORM/secrets"
+          repository: "PANTS-GOORM/secrets_be"
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
-          path: "external_files"
+          path: "secrets_files"
 
       - name: Set Secrets YML
         run: |
           mkdir -p src/main/resources
-          cp external_files/application-properties-secrets.yml src/main/resources/application-properties-secrets.yml
+          cp secrets_files/* src/main/resources/   
 
       - name: Gradle Caching
         uses: actions/cache@v3
