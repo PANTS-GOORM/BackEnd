@@ -56,3 +56,4 @@ alter user pantsadmin with encrypted password 'ddongpants';
 # grant all privileges on database wordsketch to {secrets에 해당하는 username};
 grant all privileges on database wordsketch to pantsadmin;
 ```
+
