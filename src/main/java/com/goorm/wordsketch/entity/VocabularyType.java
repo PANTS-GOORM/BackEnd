@@ -1,4 +1,4 @@
-package com.goorm.wordsketch.vocabulary;
+package com.goorm.wordsketch.entity;
 
 public enum VocabularyType {
 

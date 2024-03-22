@@ -1,8 +1,8 @@
 package com.goorm.wordsketch.unit;
 
-import com.goorm.wordsketch.vocabulary.Vocabulary;
-import com.goorm.wordsketch.vocabulary.VocabularyRepository;
-import com.goorm.wordsketch.vocabulary.VocabularyType;
+import com.goorm.wordsketch.entity.Vocabulary;
+import com.goorm.wordsketch.repository.VocabularyRepository;
+import com.goorm.wordsketch.entity.VocabularyType;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
