@@ -43,13 +43,22 @@ docker run --name WordSketch-DB -e POSTGRES_PASSWORD={원하는 root 패스워�
 docker exec -it WordSketch-DB /bin/bash
 # postgres 계정으로 전환
 su - postgres
+
 # 유저 생성
-createuser {secrets에 해당하는 username}
+
+# createuser {secrets에 해당하는 username}
+createuser pantsadmin
+
 # 데이터베이스 생성
 createdb wordsketch
+
 # psql 쉘 접속
 psql
+
 # 계정 비밀번호 설정 및 권한 부여
-alter user {secrets에 해당하는 username} with encrypted password '{secrets에 해당하는 password}';
-grant all privileges on database wordsketch to {secrets에 해당하는 username};
+
+# alter user {secrets에 해당하는 username} with encrypted password '{secrets에 해당하는 password}';
+alter user pantsadmin with encrypted password 'ddongpants';
+# grant all privileges on database wordsketch to {secrets에 해당하는 username};
+grant all privileges on database wordsketch to pantsadmin;
 ```
