@@ -26,7 +26,7 @@ public class VocabularyRepositoryTest {
     class givenTempVocabularyEntity {
 
         Vocabulary vocabulary = Vocabulary.builder()
-                .content("똥팬츠는 박종호 작품")
+                .vocabulary("똥팬츠는 박종호 작품")
                 .description("테스트용 설명입니다.")
                 .type(VocabularyType.단어)
                 .build();

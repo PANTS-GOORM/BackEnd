@@ -25,8 +25,8 @@ public class Vocabulary {
   @Column(name = "vocabulary_id")
   private Long id;
 
-  @Column(name = "content", length = 100, nullable = false, columnDefinition = "VARCHAR(100)")
-  private String content;
+  @Column(name = "vocabulary", length = 100, nullable = false, columnDefinition = "VARCHAR(100)")
+  private String vocabulary;
 
   @Column(name = "description", length = 300, nullable = false, columnDefinition = "VARCHAR(300)")
   private String description;
