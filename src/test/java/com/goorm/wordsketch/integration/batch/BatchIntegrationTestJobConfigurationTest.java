@@ -1,13 +1,10 @@
 package com.goorm.wordsketch.integration.batch;
 
-import static java.time.format.DateTimeFormatter.ofPattern;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertSame;
-
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-import java.util.List;
-
+import com.goorm.wordsketch.entity.Vocabulary;
+import com.goorm.wordsketch.entity.VocabularyContent;
+import com.goorm.wordsketch.entity.VocabularyType;
+import com.goorm.wordsketch.repository.VocabularyContentRepository;
+import com.goorm.wordsketch.repository.VocabularyRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -21,11 +18,13 @@ import org.springframework.batch.test.context.SpringBatchTest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import com.goorm.wordsketch.entity.Vocabulary;
-import com.goorm.wordsketch.entity.VocabularyContent;
-import com.goorm.wordsketch.entity.VocabularyType;
-import com.goorm.wordsketch.repository.VocabularyContentRepository;
-import com.goorm.wordsketch.repository.VocabularyRepository;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
+
+import static java.time.format.DateTimeFormatter.ofPattern;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertSame;
 
 @SuppressWarnings("null")
 @SpringBatchTest

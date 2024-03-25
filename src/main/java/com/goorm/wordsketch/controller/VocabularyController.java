@@ -2,7 +2,6 @@ package com.goorm.wordsketch.controller;
 
 import com.goorm.wordsketch.service.VocabularyService;
 import com.goorm.wordsketch.util.ErrorHandler;
-import org.hibernate.dialect.function.CastFunction;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
