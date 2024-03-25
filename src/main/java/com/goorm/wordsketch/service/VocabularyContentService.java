@@ -6,7 +6,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class VocabularyContentService {
-    private VocabularyContentRepository vocabularyContentRepository;
+    private final VocabularyContentRepository vocabularyContentRepository;
 
     @Autowired
     public VocabularyContentService(VocabularyContentRepository vocabularyContentRepository) {
