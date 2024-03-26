@@ -32,7 +32,7 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 @DisplayName("어휘 관련 컨텐츠 수집 Batch Process 테스트")
 public class BatchIntegrationTestJobConfigurationTest {
 
-  public static final DateTimeFormatter FORMATTER = ofPattern("yyyy-MM-dd");
+//  public static final DateTimeFormatter FORMATTER = ofPattern("yyyy-MM-dd");
 
   @Autowired
   private JobLauncherTestUtils jobLauncherTestUtils;
@@ -71,7 +71,7 @@ public class BatchIntegrationTestJobConfigurationTest {
 
     // Batch의 인자로 오늘 날짜를 넘겨서, 오늘 등록된 어휘만 대상으로 실행
     JobParameters jobParameters = new JobParametersBuilder()
-        .addString("createdDate", createdDate.format(FORMATTER))
+        .addString("createdDate", createdDate.toString())
         .toJobParameters();
 
     @Nested
