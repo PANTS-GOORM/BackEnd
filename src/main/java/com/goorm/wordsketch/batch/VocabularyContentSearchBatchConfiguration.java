@@ -20,6 +20,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.transaction.PlatformTransactionManager;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
@@ -41,43 +42,28 @@ public class VocabularyContentSearchBatchConfiguration {
     private final EntityManagerFactory entityManagerFactory;
 
     @Bean
-    public Job VocabularyContentSearchBatchJob(PlatformTransactionManager platformTransactionManager,
-                                               JobRepository jobRepository) {
+    public Job VocabularyContentSearchBatchJob(PlatformTransactionManager platformTransactionManager, JobRepository jobRepository) {
 
-        return new JobBuilder("VocabularyContentSearchBatchJob", jobRepository)
-                .start(VocabularyContentSearchBatchJobStep(jobRepository, platformTransactionManager))
-                .build();
+        return new JobBuilder("VocabularyContentSearchBatchJob", jobRepository).start(VocabularyContentSearchBatchJobStep(jobRepository, platformTransactionManager)).build();
     }
 
     @Bean
     @JobScope
-    public Step VocabularyContentSearchBatchJobStep(JobRepository jobRepository,
-                                                    PlatformTransactionManager platformTransactionManager) {
-        return new StepBuilder("VocabularyContentSearchBatchJobStep", jobRepository)
-                .<Vocabulary, VocabularyContent>chunk(10, platformTransactionManager)
-                .reader(VocabularyContentSearchBatchReader(null))
-                .writer(VocabularyContentSearchBatchWriter())
-                .build();
+    public Step VocabularyContentSearchBatchJobStep(JobRepository jobRepository, PlatformTransactionManager platformTransactionManager) {
+        return new StepBuilder("VocabularyContentSearchBatchJobStep", jobRepository).<Vocabulary, VocabularyContent>chunk(10, platformTransactionManager).reader(VocabularyContentSearchBatchReader(null)).writer(VocabularyContentSearchBatchWriter()).build();
     }
 
     @Bean
     @StepScope
-    public JpaPagingItemReader<Vocabulary> VocabularyContentSearchBatchReader(
-            @Value("#{jobParameters[createdDate]}") String createdDate) {
+    public JpaPagingItemReader<Vocabulary> VocabularyContentSearchBatchReader(@Value("#{jobParameters[createdDate]}") String createdDate) {
 
         Map<String, Object> params = new HashMap<>();
 
-        params.put("createdDate", LocalDate.parse(createdDate, FORMATTER));
+        params.put("createdDate", LocalDateTime.parse(createdDate, FORMATTER));
 
         String queryString = "SELECT v FROM Vocabulary v WHERE v.createdDate = :createdDate";
 
-        return new JpaPagingItemReaderBuilder<Vocabulary>()
-                .name("VocabularyContentSearchBatchReader")
-                .entityManagerFactory(entityManagerFactory)
-                .pageSize(10)
-                .queryString(queryString)
-                .parameterValues(params)
-                .build();
+        return new JpaPagingItemReaderBuilder<Vocabulary>().name("VocabularyContentSearchBatchReader").entityManagerFactory(entityManagerFactory).pageSize(10).queryString(queryString).parameterValues(params).build();
     }
 
     @Bean
