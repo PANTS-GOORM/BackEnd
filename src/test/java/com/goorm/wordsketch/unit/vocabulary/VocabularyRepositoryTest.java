@@ -1,8 +1,8 @@
-package com.goorm.wordsketch.unit;
+package com.goorm.wordsketch.unit.vocabulary;
 
 import com.goorm.wordsketch.entity.Vocabulary;
-import com.goorm.wordsketch.repository.VocabularyRepository;
 import com.goorm.wordsketch.entity.VocabularyType;
+import com.goorm.wordsketch.repository.VocabularyRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -26,7 +26,7 @@ public class VocabularyRepositoryTest {
     class givenTempVocabularyEntity {
 
         Vocabulary vocabulary = Vocabulary.builder()
-                .vocabulary("똥팬츠는 박종호 작품")
+                .vocabulary("테용 테스용 테스트용 ")
                 .description("테스트용 설명입니다.")
                 .type(VocabularyType.단어)
                 .build();

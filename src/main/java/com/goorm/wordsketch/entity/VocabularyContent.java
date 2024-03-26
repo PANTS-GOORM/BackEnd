@@ -11,8 +11,8 @@ import java.sql.Timestamp;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "vocabulary")
-public class Vocabulary {
+@Table(name = "vocabulary_content")
+public class VocabularyContent {
 
     // @GeneratedValue(strategy = GenerationType.xxx) : Primary Key의 키 생성
     // 전략(Strategy)을 설정하고자 할 때 사용
@@ -22,18 +22,18 @@ public class Vocabulary {
     // GenerationType.TABLE : 키 생성 전용 테이블을 생성해서 키 생성. @TableGenerator와 함께 사용
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "vocabulary_id")
+    @Column(name = "vocabulary_content_id")
     private Long id;
 
-    @Column(name = "vocabulary", nullable = false, columnDefinition = "VARCHAR(100)")
-    private String vocabulary;
+    @ManyToOne
+    @JoinColumn(name = "vocabulary", nullable = false)
+    private Vocabulary vocabulary;
 
-    @Column(name = "description", nullable = false, columnDefinition = "VARCHAR(300)")
-    private String description;
+    @Column(name = "content_url", length = 50, nullable = false, columnDefinition = "VARCHAR(50)")
+    private String contentURL;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "type", nullable = false)
-    private VocabularyType type;
+    @Column(name = "problem_description", length = 300, nullable = false, columnDefinition = "VARCHAR(300)")
+    private String problemDescription;
 
     // Timestamp의 값을 현재 시간으로 자동 설정
     @Column(name = "created_date", nullable = false, updatable = false, insertable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")

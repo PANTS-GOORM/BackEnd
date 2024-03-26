@@ -6,8 +6,11 @@ spring:
   config:
     activate:
       on-profile: local
-    import:
-      - classpath:secrets/db-local.yml
+  datasource: # DB 커넥션 설정
+    url: jdbc:postgresql://localhost:5432/wordsketch?serverTimezone=UTC&characterEncoding=UTF-8
+    username: pantsadmin
+    password: ddongpants
+    driver-class-name: org.postgresql.Driver
   jpa:
     database: postgresql
     hibernate:
