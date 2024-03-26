@@ -18,7 +18,7 @@ import org.springframework.batch.test.context.SpringBatchTest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
@@ -59,7 +59,7 @@ public class BatchIntegrationTestJobConfigurationTest {
   @DisplayName("Given: DB에 새로 등록된 어휘가 존재할 때")
   class Given_DB에_새로_등록된_어휘가_존재할_때 {
 
-    LocalDate createdDate = LocalDate.now();
+    LocalDateTime createdDate = LocalDateTime.now();
 
     Vocabulary vocabulary = Vocabulary.builder()
         .vocabulary("이듬해")
