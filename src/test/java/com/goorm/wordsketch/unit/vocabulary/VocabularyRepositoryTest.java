@@ -17,32 +17,32 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @DisplayName("VocabularyRepository 기능 테스트")
 public class VocabularyRepositoryTest {
 
-  @Autowired
-  private VocabularyRepository vocabularyRepository;
+    @Autowired
+    private VocabularyRepository vocabularyRepository;
 
-  @SuppressWarnings("null")
-  @Nested
-  @DisplayName("Given: 임의의 Vocabulary Entity가 있고")
-  class givenTempVocabularyEntity {
-
-    Vocabulary vocabulary = Vocabulary.builder()
-        .vocabulary("똥팬츠는 박종호 작품")
-        .description("테스트용 설명입니다.")
-        .type(VocabularyType.단어)
-        .build();
-
+    @SuppressWarnings("null")
     @Nested
-    @DisplayName("When: 연결된 DB에 저장을 요청하면")
-    class requestSaveEntityInDB {
+    @DisplayName("Given: 임의의 Vocabulary Entity가 있고")
+    class givenTempVocabularyEntity {
 
-      Vocabulary savedVocabulary = vocabularyRepository.save(vocabulary);
+        Vocabulary vocabulary = Vocabulary.builder()
+                .vocabulary("테용 테스용 테스트용 ")
+                .description("테스트용 설명입니다.")
+                .type(VocabularyType.단어)
+                .build();
 
-      @Test
-      @DisplayName("Then: 정상적으로 Entity가 DB에 저장된다")
-      void saveEntityCorrectly() {
+        @Nested
+        @DisplayName("When: 연결된 DB에 저장을 요청하면")
+        class requestSaveEntityInDB {
 
-        assertEquals(vocabulary, savedVocabulary);
-      }
+            Vocabulary savedVocabulary = vocabularyRepository.save(vocabulary);
+
+            @Test
+            @DisplayName("Then: 정상적으로 Entity가 DB에 저장된다")
+            void saveEntityCorrectly() {
+
+                assertEquals(vocabulary, savedVocabulary);
+            }
+        }
     }
-  }
 }
