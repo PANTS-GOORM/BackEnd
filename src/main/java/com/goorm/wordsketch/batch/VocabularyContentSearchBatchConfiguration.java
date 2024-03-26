@@ -38,60 +38,55 @@ import static java.time.format.DateTimeFormatter.ofPattern;
 @RequiredArgsConstructor
 public class VocabularyContentSearchBatchConfiguration {
 
-  public static final DateTimeFormatter FORMATTER = ofPattern("yyyy-MM-dd");
+    public static final DateTimeFormatter FORMATTER = ofPattern("yyyy-MM-dd");
 
-  private final EntityManagerFactory entityManagerFactory;
+    private final EntityManagerFactory entityManagerFactory;
 
-  @Bean
-  public Job VocabularyContentSearchBatchJob(PlatformTransactionManager platformTransactionManager,
-      JobRepository jobRepository) {
+    @Bean
+    public Job VocabularyContentSearchBatchJob(PlatformTransactionManager platformTransactionManager,
+                                               JobRepository jobRepository) {
 
-    return new JobBuilder("VocabularyContentSearchBatchJob", jobRepository)
-        .start(VocabularyContentSearchBatchJobStep(jobRepository, platformTransactionManager))
-        .build();
-  }
+        return new JobBuilder("VocabularyContentSearchBatchJob", jobRepository)
+                .start(VocabularyContentSearchBatchJobStep(jobRepository, platformTransactionManager))
+                .build();
+    }
 
-  @Bean
-  @JobScope
-  public Step VocabularyContentSearchBatchJobStep(JobRepository jobRepository,
-      PlatformTransactionManager platformTransactionManager) {
-    return new StepBuilder("VocabularyContentSearchBatchJobStep", jobRepository)
-        .<Vocabulary, VocabularyContent>chunk(10, platformTransactionManager)
-        .reader(VocabularyContentSearchBatchReader(null))
-        .writer(VocabularyContentSearchBatchWriter())
-        .build();
-  }
+    @Bean
+    @JobScope
+    public Step VocabularyContentSearchBatchJobStep(JobRepository jobRepository,
+                                                    PlatformTransactionManager platformTransactionManager) {
+        return new StepBuilder("VocabularyContentSearchBatchJobStep", jobRepository)
+                .<Vocabulary, VocabularyContent>chunk(10, platformTransactionManager)
+                .reader(VocabularyContentSearchBatchReader(null))
+                .writer(VocabularyContentSearchBatchWriter())
+                .build();
+    }
 
-  @Bean
-  @StepScope
-  public JpaPagingItemReader<Vocabulary> VocabularyContentSearchBatchReader(
-      @Value("#{jobParameters[createdDate]}") String createdDate) {
+    @Bean
+    @StepScope
+    public JpaPagingItemReader<Vocabulary> VocabularyContentSearchBatchReader(
+            @Value("#{jobParameters[createdDate]}") String createdDate) {
 
-    Map<String, Object> params = new HashMap<>();
+        Map<String, Object> params = new HashMap<>();
 
-    params.put("createdDate", LocalDate.parse(createdDate, FORMATTER));
+        params.put("createdDate", LocalDate.parse(createdDate, FORMATTER));
 
-    String className = Vocabulary.class.getName();
-    String queryString = String.format(
-        "SELECT * " +
-            "FROM vocabulary v " +
-            "WHERE v.createdDate =:createdDate ",
-        className);
+        String queryString = "SELECT v FROM Vocabulary v WHERE v.createdDate = :createdDate";
 
-    return new JpaPagingItemReaderBuilder<Vocabulary>()
-        .name("VocabularyContentSearchBatchReader")
-        .entityManagerFactory(entityManagerFactory)
-        .pageSize(10)
-        .queryString(queryString)
-        .parameterValues(params)
-        .build();
-  }
+        return new JpaPagingItemReaderBuilder<Vocabulary>()
+                .name("VocabularyContentSearchBatchReader")
+                .entityManagerFactory(entityManagerFactory)
+                .pageSize(10)
+                .queryString(queryString)
+                .parameterValues(params)
+                .build();
+    }
 
-  @Bean
-  public JpaItemWriter<VocabularyContent> VocabularyContentSearchBatchWriter() {
-    JpaItemWriter<VocabularyContent> jpaItemWriter = new JpaItemWriter<>();
-    jpaItemWriter.setEntityManagerFactory(entityManagerFactory);
-    return jpaItemWriter;
-  }
+    @Bean
+    public JpaItemWriter<VocabularyContent> VocabularyContentSearchBatchWriter() {
+        JpaItemWriter<VocabularyContent> jpaItemWriter = new JpaItemWriter<>();
+        jpaItemWriter.setEntityManagerFactory(entityManagerFactory);
+        return jpaItemWriter;
+    }
 
 }
