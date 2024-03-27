@@ -3,6 +3,7 @@ package com.goorm.wordsketch.entity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.sql.Timestamp;
@@ -11,6 +12,7 @@ import java.sql.Timestamp;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
+@Getter
 @Table(name = "vocabulary")
 public class Vocabulary {
 
@@ -25,8 +27,8 @@ public class Vocabulary {
     @Column(name = "vocabulary_id")
     private Long id;
 
-    @Column(name = "vocabulary", nullable = false, columnDefinition = "VARCHAR(100)")
-    private String vocabulary;
+    @Column(name = "substance", nullable = false, columnDefinition = "VARCHAR(100)")
+    private String substance;
 
     @Column(name = "description", nullable = false, columnDefinition = "VARCHAR(300)")
     private String description;
