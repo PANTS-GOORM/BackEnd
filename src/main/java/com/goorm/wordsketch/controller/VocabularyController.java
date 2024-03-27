@@ -1,18 +1,19 @@
 package com.goorm.wordsketch.controller;
 
+import com.goorm.wordsketch.dto.GuestStudyContent;
+import com.goorm.wordsketch.entity.VocabularyType;
 import com.goorm.wordsketch.service.VocabularyService;
 import com.goorm.wordsketch.util.ErrorHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @CrossOrigin("*")
 @RestController
-@RequestMapping("/vocabulary")
+@RequestMapping("/vocab")
 public class VocabularyController {
     private final VocabularyService vocabularyService;
     private final ErrorHandler errorHandler;
@@ -24,9 +25,10 @@ public class VocabularyController {
     }
 
     @GetMapping("/random")
-    public ResponseEntity<?> getRandomContentList() {
+    public ResponseEntity<?> getRandomContentList(@RequestParam("type") VocabularyType type, @RequestParam("amount") Integer amount) {
         try {
-            return new ResponseEntity<>(HttpStatus.OK);
+            List<GuestStudyContent> result = vocabularyService.getGuestProblem(type, amount);
+            return new ResponseEntity<>(result, HttpStatus.OK);
         } catch (Exception e) {
             return errorHandler.errorMessage(e);
         }

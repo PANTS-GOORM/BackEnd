@@ -1,4 +1,4 @@
-package com.goorm.wordsketch.batch;
+package com.goorm.wordsketch.config;
 
 import com.goorm.wordsketch.entity.Vocabulary;
 import com.goorm.wordsketch.entity.VocabularyContent;
@@ -20,7 +20,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.transaction.PlatformTransactionManager;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
@@ -59,7 +58,7 @@ public class VocabularyContentSearchBatchConfiguration {
 
         Map<String, Object> params = new HashMap<>();
 
-        params.put("createdDate", LocalDateTime.parse(createdDate, FORMATTER));
+        params.put("createdDate", LocalDate.parse(createdDate, FORMATTER));
 
         String queryString = "SELECT v FROM Vocabulary v WHERE v.createdDate = :createdDate";
 
