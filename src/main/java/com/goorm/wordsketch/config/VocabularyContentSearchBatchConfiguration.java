@@ -1,3 +1,4 @@
+/*
 package com.goorm.wordsketch.config;
 
 import com.goorm.wordsketch.entity.Vocabulary;
@@ -72,4 +73,4 @@ public class VocabularyContentSearchBatchConfiguration {
         return jpaItemWriter;
     }
 
-}
+}*/
