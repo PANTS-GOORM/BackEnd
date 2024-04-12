@@ -4,10 +4,8 @@ import com.goorm.wordsketch.entity.User;
 import com.goorm.wordsketch.entity.UserRole;
 import com.goorm.wordsketch.entity.UserSocialType;
 import com.goorm.wordsketch.repository.UserRepository;
-import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserService;
@@ -27,12 +25,6 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
     @Autowired
     UserRepository userRepository;
 
-    @Autowired
-    HttpSession httpSession;
-
-    @Autowired
-    private OAuth2AuthorizedClientService authorizedClientService;
-
     @Override
     public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
         System.out.println("userRequest = " + userRequest);
@@ -49,7 +41,6 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
         System.out.println("response = " + response);
         if (registrationId.equals("github")) {
-//            Map<String, Object> hash = (Map<String, Object>) response.get("response");
             email = (String) response.get("url");
         } else if (registrationId.equals("kakao")) {
             Map<String, Object> hash = (Map<String, Object>) response.get("kakao_account");
@@ -74,7 +65,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
                         .nickname((String) response.get("login"))
                         .profileImg((String) response.get("avatar_url"))
                         .role(UserRole.USER)
-                        .isAdmin("false")
+                        .isAdmin(false)
                         .build();
             } else if (registrationId.equals("kakao")) {
                 Map<String, Object> hash = (Map<String, Object>) response.get("properties");
@@ -85,19 +76,20 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
                         .nickname((String) hash.get("nickname"))
                         .profileImg((String) hash.get("profile_image"))
                         .role(UserRole.USER)
-                        .isAdmin("false")
+                        .refreshToken("test")
+                        .isAdmin(false)
                         .build();
             } else if (registrationId.equals("google")) {
 
             }
         }
-
-        httpSession.setAttribute("user", user);
+        userRepository.save(user);
 
         // oAuth2User의 attributes를 복사하여 새로운 맵을 만듭니다.
         Map<String, Object> attributes = new HashMap<>(oAuth2User.getAttributes());
         // 새 맵에 사용자 객체를 추가합니다.
         attributes.put("customUser", user);
+
 
         return new DefaultOAuth2User(
                 Collections.singleton(new SimpleGrantedAuthority(user.getRole().toString()))
