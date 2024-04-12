@@ -86,3 +86,20 @@ jobs:
             ${{ secrets.DOCKERHUB_USERNAME }}/pants-be:${{ env.version }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      - name: Checkout manifest repository
+        uses: actions/checkout@v4
+        with:
+          repository: "PANTS-GOORM/infra"
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          path: manifest
+
+      - name: Update Deployment image tag
+        run: |
+          sed -i "s|chickennight/pants-be:[^[:space:]]*|chickennight/pants-be:${{ env.version }}|" ./manifest/backend/deployment.yaml
+          cd manifest
+          git config user.name "chickennight"
+          git config user.email "john0513@naver.com"
+          git add backend/deployment.yaml
+          git commit -m "Update back image tag to ${{ env.version }}"
+          git push
