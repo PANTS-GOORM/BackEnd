@@ -89,12 +89,14 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         Map<String, Object> attributes = new HashMap<>(oAuth2User.getAttributes());
         // 새 맵에 사용자 객체를 추가합니다.
         attributes.put("customUser", user);
+        attributes.put("email", email);
 
 
+        System.out.println("userNameAttributeName = " + userNameAttributeName);
         return new DefaultOAuth2User(
                 Collections.singleton(new SimpleGrantedAuthority(user.getRole().toString()))
                 , attributes
-                , userNameAttributeName
+                , "email"
         );
     }
 }

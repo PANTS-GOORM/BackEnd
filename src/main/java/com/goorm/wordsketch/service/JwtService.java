@@ -1,23 +1,32 @@
 package com.goorm.wordsketch.service;
 
-import com.auth0.jwt.JWT;
-import com.auth0.jwt.algorithms.Algorithm;
+import com.goorm.wordsketch.entity.User;
 import com.goorm.wordsketch.repository.UserRepository;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.security.Keys;
+import io.jsonwebtoken.security.SignatureException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.authentication.CredentialsExpiredException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.AuthorityUtils;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
-import java.util.Date;
-import java.util.Optional;
+import javax.crypto.SecretKey;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
 @Getter
-@Slf4j
 public class JwtService {
 
     @Value("${jwt.secretKey}")
@@ -36,141 +45,162 @@ public class JwtService {
     private String refreshHeader;
 
     /**
-     * JWT의 Subject와 Claim으로 email 사용 -> 클레임의 name을 "email"으로 설정
-     * JWT의 헤더에 들어오는 값 : 'Authorization(Key) = Bearer {토큰} (Value)' 형식
+     * OAuth2 로그인이기 때문에 username은 사실상 email
      */
-    private static final String ACCESS_TOKEN_SUBJECT = "AccessToken";
-    private static final String REFRESH_TOKEN_SUBJECT = "RefreshToken";
-    private static final String EMAIL_CLAIM = "email";
-    private static final String BEARER = "Bearer ";
+    private final String ISSUER = "WORD SKETCH";
+    private final String ACCESS_TOKEN_SUBJECT = "AccessToken";
+    private final String REFRESH_TOKEN_SUBJECT = "RefreshToken";
+    private final String USERNAME_CLAIM = "username";
+    private final String AUTHRITIES_CLAIM = "authorities";
+    private final String BEARER = "Bearer ";
 
     private final UserRepository userRepository;
 
     /**
-     * AccessToken 생성 메소드
+     * AccessToken 생성, 응답 헤더에 추가
+     *
+     * @param response       응답
+     * @param authentication 인증, 인가 정보
      */
-    public String createAccessToken(String email) {
-        Date now = new Date();
-        return JWT.create() // JWT 토큰을 생성하는 빌더 반환
-                .withSubject(ACCESS_TOKEN_SUBJECT) // JWT의 Subject 지정 -> AccessToken이므로 AccessToken
-                .withExpiresAt(new Date(now.getTime() + accessTokenExpirationPeriod)) // 토큰 만료 시간 설정
+    public void createAccessToken(HttpServletResponse response, Authentication authentication) {
+        SecretKey key = Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8));
+        String jwt = Jwts.builder().issuer(ISSUER).subject(ACCESS_TOKEN_SUBJECT)
+                .claim(USERNAME_CLAIM, authentication.getName())
+                .claim(AUTHRITIES_CLAIM, populateAuthorities(authentication.getAuthorities()))
+                .issuedAt(new Date())
+                .expiration(new Date((new Date()).getTime() + accessTokenExpirationPeriod))
+                .signWith(key).compact();
 
-                //Claim으로 사용자 정의 클레임 생성
-                //추가하실 경우 .withClaim(클래임 이름, 클래임 값) 으로 설정
-                .withClaim(EMAIL_CLAIM, email)
-                .sign(Algorithm.HMAC512(secretKey)); // HMAC512 알고리즘 사용, application-jwt.yml에서 지정한 secret 키로 암호화
+        response.setHeader(accessHeader, jwt);
     }
 
     /**
-     * RefreshToken 생성
-     * RefreshToken은 Claim에 email도 넣지 않으므로 withClaim() X
+     * RefreshToken 생성, 응답 헤더에 추가 및 db에 저장
+     *
+     * @param response       응답
+     * @param authentication 인증, 인가 정보
      */
-    public String createRefreshToken() {
-        Date now = new Date();
-        return JWT.create()
-                .withSubject(REFRESH_TOKEN_SUBJECT)
-                .withExpiresAt(new Date(now.getTime() + refreshTokenExpirationPeriod))
-                .sign(Algorithm.HMAC512(secretKey));
+    public void createRefreshToken(HttpServletResponse response, Authentication authentication) {
+        SecretKey key = Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8));
+        String jwt = Jwts.builder().issuer(ISSUER).subject(REFRESH_TOKEN_SUBJECT)
+                .claim(USERNAME_CLAIM, authentication.getName())
+                .claim(AUTHRITIES_CLAIM, populateAuthorities(authentication.getAuthorities()))
+                .issuedAt(new Date())
+                .expiration(new Date((new Date()).getTime() + refreshTokenExpirationPeriod))
+                .signWith(key).compact();
+
+        System.out.println("authentication.getName() = " + authentication.getName());
+        response.setHeader(refreshHeader, jwt);
+        updateRefreshToken(jwt, authentication.getName());
     }
 
     /**
-     * AccessToken 헤더에 실어서 보내기
+     * AccessToken, RefreshToken 재발급
+     * AccessToken 기간이 유효하지 않고 RefreshToken 기간이 유효할 떄 사용
+     *
+     * @param response     사용자 응답. 'createAccessToken'과 'createRefreshToken'을 호출할 때 사용
+     * @param refreshToken 유효한 리프레쉬 토큰. DB에서 user를 찾는데 사용
      */
-    public void sendAccessToken(HttpServletResponse response, String accessToken) {
-        response.setStatus(HttpServletResponse.SC_OK);
-
-        response.setHeader(accessHeader, accessToken);
-        System.out.println("재발급된 Access Token : " + accessToken);
-    }
-
-    /**
-     * AccessToken + RefreshToken 헤더에 실어서 보내기
-     */
-    public void sendAccessAndRefreshToken(HttpServletResponse response, String accessToken, String refreshToken) {
-        response.setStatus(HttpServletResponse.SC_OK);
-
-        response.setHeader(accessHeader, accessToken);
-        response.setHeader(refreshHeader, refreshToken);
-        System.out.println("발급된 Access Token : " + accessToken);
-        System.out.println("발급된 Refresh Token : " + refreshToken);
-        System.out.println("Access Token, Refresh Token 헤더 설정 완료");
-    }
-
-    /**
-     * 헤더에서 RefreshToken 추출
-     * 토큰 형식 : Bearer XXX에서 Bearer를 제외하고 순수 토큰만 가져오기 위해서
-     * 헤더를 가져온 후 "Bearer"를 삭제(""로 replace)
-     */
-    public Optional<String> extractRefreshToken(HttpServletRequest request) {
-        return Optional.ofNullable(request.getHeader(refreshHeader))
-                .filter(refreshToken -> refreshToken.startsWith(BEARER))
-                .map(refreshToken -> refreshToken.replace(BEARER, ""));
-    }
-
-    /**
-     * 헤더에서 AccessToken 추출
-     * 토큰 형식 : Bearer XXX에서 Bearer를 제외하고 순수 토큰만 가져오기 위해서
-     * 헤더를 가져온 후 "Bearer"를 삭제(""로 replace)
-     */
-    public Optional<String> extractAccessToken(HttpServletRequest request) {
-        return Optional.ofNullable(request.getHeader(accessHeader))
-                .filter(refreshToken -> refreshToken.startsWith(BEARER))
-                .map(refreshToken -> refreshToken.replace(BEARER, ""));
-    }
-
-    /**
-     * AccessToken에서 Email 추출
-     * 추출 전에 JWT.require()로 검증기 생성
-     * verify로 AceessToken 검증 후
-     * 유효하다면 getClaim()으로 이메일 추출
-     * 유효하지 않다면 빈 Optional 객체 반환
-     */
-    public Optional<String> extractEmail(String accessToken) {
-        try {
-            // 토큰 유효성 검사하는 데에 사용할 알고리즘이 있는 JWT verifier builder 반환
-            return Optional.ofNullable(JWT.require(Algorithm.HMAC512(secretKey))
-                    .build() // 반환된 빌더로 JWT verifier 생성
-                    .verify(accessToken) // accessToken을 검증하고 유효하지 않다면 예외 발생
-                    .getClaim(EMAIL_CLAIM) // claim(Emial) 가져오기
-                    .asString());
-        } catch (Exception e) {
-            System.out.println("액세스 토큰이 유효하지 않습니다.");
-            return Optional.empty();
+    public void reIssueToken(HttpServletResponse response, String refreshToken) {
+        Optional<User> user = userRepository.findByRefreshToken(refreshToken);
+        if (user.isPresent()) {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            createAccessToken(response, authentication);
+            createRefreshToken(response, authentication);
         }
     }
 
     /**
-     * AccessToken 헤더 설정
+     * AccessToken 검증
+     *
+     * @param request  사용자 요청. 헤더에서 토큰을 추출하기 위해 사용
+     * @param response 응답. 예외처리를 위해 사용
      */
-    public void setAccessTokenHeader(HttpServletResponse response, String accessToken) {
-        response.setHeader(accessHeader, accessToken);
+    public void validateAccessToken(HttpServletRequest request, HttpServletResponse response) {
+        String jwt = request.getHeader(accessHeader);
+        if (jwt != null) {
+            try {
+                SecretKey key = Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8));
+
+                Claims claims = Jwts.parser()
+                        .verifyWith(key)
+                        .build()
+                        .parseSignedClaims(jwt)
+                        .getPayload();
+                String username = String.valueOf(claims.get(USERNAME_CLAIM));
+                String authorities = String.valueOf(claims.get(AUTHRITIES_CLAIM));
+                Authentication auth = new UsernamePasswordAuthenticationToken(username, null,
+                        AuthorityUtils.commaSeparatedStringToAuthorityList(authorities));
+                SecurityContextHolder.getContext().setAuthentication(auth);
+            } catch (ExpiredJwtException expiredJwtException) {
+                validateRefreshToken(request, response);
+            } catch (SignatureException signatureException) {
+                throw new SecurityException("토큰 서명 검증에 실패하였습니다");
+            } catch (Exception exception) {
+                throw new RuntimeException("예상하지 못한 오류가 발생했습니다.", exception);
+            }
+        }
     }
 
     /**
-     * RefreshToken 헤더 설정
+     * RefreshToken 검증
+     *
+     * @param request  사용자 요청. 헤더에서 토큰을 추출하기 위해 사용
+     * @param response 응답. 예외처리를 위해 사용
      */
-    public void setRefreshTokenHeader(HttpServletResponse response, String refreshToken) {
-        response.setHeader(refreshHeader, refreshToken);
+    public void validateRefreshToken(HttpServletRequest request, HttpServletResponse response) {
+        String jwt = request.getHeader(refreshHeader);
+        if (jwt != null) {
+            try {
+                SecretKey key = Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8));
+
+                Claims claims = Jwts.parser()
+                        .verifyWith(key)
+                        .build()
+                        .parseSignedClaims(jwt)
+                        .getPayload();
+                String username = String.valueOf(claims.get(USERNAME_CLAIM));
+                String authorities = String.valueOf(claims.get(AUTHRITIES_CLAIM));
+                Authentication auth = new UsernamePasswordAuthenticationToken(username, null,
+                        AuthorityUtils.commaSeparatedStringToAuthorityList(authorities));
+                SecurityContextHolder.getContext().setAuthentication(auth);
+
+                reIssueToken(response, jwt);
+            } catch (ExpiredJwtException expiredJwtException) {
+                throw new CredentialsExpiredException("토큰 유효기간 검증에 실패했습니다");
+            } catch (SignatureException signatureException) {
+                throw new SecurityException("토큰 서명 검증에 실패하였습니다");
+            } catch (Exception exception) {
+                throw new RuntimeException("예상하지 못한 오류가 발생했습니다.", exception);
+            }
+        }
     }
 
     /**
      * RefreshToken DB 저장(업데이트)
+     *
+     * @param refreshToken 리프레쉬 토큰. DB에 업데이트할 값
+     * @param name         OAuth2를 사용하기 때문에 사실 email이다. 이를 사용해 DB에서 user를 찾을 수 있음
      */
-    public void updateRefreshToken(String email, String refreshToken) {
-        userRepository.findByEmail(email)
+    public void updateRefreshToken(String refreshToken, String name) {
+        userRepository.findByEmail(name)
                 .ifPresentOrElse(
                         user -> user.updateRefreshToken(refreshToken),
                         () -> new Exception("일치하는 회원이 없습니다.")
                 );
     }
 
-    public boolean isTokenValid(String token) {
-        try {
-            JWT.require(Algorithm.HMAC512(secretKey)).build().verify(token);
-            return true;
-        } catch (Exception e) {
-            System.out.println("유효하지 않은 토큰입니다. " + e.getMessage());
-            return false;
+    /**
+     * 권한들을 String으로 반환
+     *
+     * @param collection 권한들 ex.ADMIN, USER
+     * @return authorities 중복이 없고, 쉼표로 구분된 문자열 권한들
+     */
+    private String populateAuthorities(Collection<? extends GrantedAuthority> collection) {
+        Set<String> authoritiesSet = new HashSet<>();
+        for (GrantedAuthority authority : collection) {
+            authoritiesSet.add(authority.getAuthority());
         }
+        return String.join(",", authoritiesSet);
     }
 }
