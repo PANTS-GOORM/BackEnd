@@ -24,6 +24,8 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
         if (null != authentication) {
             jwtService.createAccessToken(response, authentication);
             jwtService.createRefreshToken(response, authentication);
+
+            response.sendRedirect("http://localhost:3000/");
         }
     }
 }

@@ -33,8 +33,7 @@ public class JwtTokenValidatorFilter extends OncePerRequestFilter {
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getServletPath();
-        System.out.println("path = " + path);
-        System.out.println("res = " + (path.contains("/oauth2/login/") || "/".equals(path) || "/favicon.ico".equals(path)));
-        return path.contains("/oauth2/login/") || "/".equals(path) || "/favicon.ico".equals(path);
+        System.out.println(path.startsWith("/login/oauth2") || path.startsWith("/kauth") || "/".equals(path) || "/favicon.ico".equals(path));
+        return path.startsWith("/login/oauth2") || path.startsWith("/oauth2") || "/".equals(path) || "/favicon.ico".equals(path);
     }
 }

@@ -7,6 +7,7 @@ import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import io.jsonwebtoken.security.SignatureException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.Getter;
@@ -38,11 +39,11 @@ public class JwtService {
     @Value("${jwt.refresh.expiration}")
     private Long refreshTokenExpirationPeriod;
 
-    @Value("${jwt.access.header}")
-    private String accessHeader;
+    @Value("${jwt.access.cookie}")
+    private String accessCookie;
 
-    @Value("${jwt.refresh.header}")
-    private String refreshHeader;
+    @Value("${jwt.refresh.cookie}")
+    private String refreshCookie;
 
     /**
      * OAuth2 로그인이기 때문에 username은 사실상 email
@@ -71,7 +72,7 @@ public class JwtService {
                 .expiration(new Date((new Date()).getTime() + accessTokenExpirationPeriod))
                 .signWith(key).compact();
 
-        response.setHeader(accessHeader, jwt);
+        response.addCookie(createCookie(accessCookie, jwt));
     }
 
     /**
@@ -90,7 +91,7 @@ public class JwtService {
                 .signWith(key).compact();
 
         System.out.println("authentication.getName() = " + authentication.getName());
-        response.setHeader(refreshHeader, jwt);
+        response.addCookie(createCookie(refreshCookie, jwt));
         updateRefreshToken(jwt, authentication.getName());
     }
 
@@ -117,7 +118,13 @@ public class JwtService {
      * @param response 응답. 예외처리를 위해 사용
      */
     public void validateAccessToken(HttpServletRequest request, HttpServletResponse response) {
-        String jwt = request.getHeader(accessHeader);
+        String jwt = null;
+        Cookie[] cookies = request.getCookies();
+        for(Cookie cookie : cookies) {
+            if(cookie.getName().equals(accessCookie)) {
+                jwt = cookie.getValue();
+            }
+        }
         if (jwt != null) {
             try {
                 SecretKey key = Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8));
@@ -149,7 +156,13 @@ public class JwtService {
      * @param response 응답. 예외처리를 위해 사용
      */
     public void validateRefreshToken(HttpServletRequest request, HttpServletResponse response) {
-        String jwt = request.getHeader(refreshHeader);
+        String jwt = null;
+        Cookie[] cookies = request.getCookies();
+        for(Cookie cookie : cookies) {
+            if(cookie.getName().equals(refreshCookie)) {
+                jwt = cookie.getValue();
+            }
+        }
         if (jwt != null) {
             try {
                 SecretKey key = Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8));
@@ -202,5 +215,15 @@ public class JwtService {
             authoritiesSet.add(authority.getAuthority());
         }
         return String.join(",", authoritiesSet);
+    }
+
+    private Cookie createCookie(String key, String value) {
+        Cookie cookie = new Cookie(key, value);
+        cookie.setMaxAge(Math.toIntExact(refreshTokenExpirationPeriod));
+        // cookie.setSecure(true);
+        cookie.setPath("/");
+        cookie.setHttpOnly(true);
+
+        return cookie;
     }
 }

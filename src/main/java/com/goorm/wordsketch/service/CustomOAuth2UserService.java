@@ -34,13 +34,12 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
         // 서비스 구분을 위한 작업 (구글: google, 깃허브: github, 카카오: kakao)
         String registrationId = userRequest.getClientRegistration().getRegistrationId();
-        String userNameAttributeName = userRequest.getClientRegistration().getProviderDetails().getUserInfoEndpoint().getUserNameAttributeName();
 
         String email;
         Map<String, Object> response = oAuth2User.getAttributes();
 
         System.out.println("response = " + response);
-        if (registrationId.equals("github")) {
+        if (registrationId.equals("github") || registrationId.equals("google")) {
             email = (String) response.get("url");
         } else if (registrationId.equals("kakao")) {
             Map<String, Object> hash = (Map<String, Object>) response.get("kakao_account");
@@ -65,6 +64,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
                         .nickname((String) response.get("login"))
                         .profileImg((String) response.get("avatar_url"))
                         .role(UserRole.USER)
+                        .refreshToken("test")
                         .isAdmin(false)
                         .build();
             } else if (registrationId.equals("kakao")) {
@@ -80,23 +80,27 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
                         .isAdmin(false)
                         .build();
             } else if (registrationId.equals("google")) {
-
+                user = user.builder()
+                        .email(email)
+                        .socialType(UserSocialType.valueOf(registrationId.toUpperCase()))
+                        .nickname((String) response.get("name"))
+                        .profileImg((String) response.get("picture"))
+                        .role(UserRole.USER)
+                        .refreshToken("test")
+                        .isAdmin(false)
+                        .build();
             }
         }
         userRepository.save(user);
 
-        // oAuth2User의 attributes를 복사하여 새로운 맵을 만듭니다.
+        // oAuth2User의 attributes가 불변객체라 이를 복사하고 email을 추가함.
         Map<String, Object> attributes = new HashMap<>(oAuth2User.getAttributes());
-        // 새 맵에 사용자 객체를 추가합니다.
-        attributes.put("customUser", user);
-        attributes.put("email", email);
+        attributes.put("name", email);
 
-
-        System.out.println("userNameAttributeName = " + userNameAttributeName);
         return new DefaultOAuth2User(
                 Collections.singleton(new SimpleGrantedAuthority(user.getRole().toString()))
                 , attributes
-                , "email"
+                , "name"
         );
     }
 }
