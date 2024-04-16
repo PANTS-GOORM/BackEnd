@@ -195,11 +195,14 @@ public class JwtServiceImpl implements JwtService {
      * @param name         OAuth2를 사용하기 때문에 사실 email이다. 이를 사용해 DB에서 user를 찾을 수 있음
      */
     public void updateRefreshToken(String refreshToken, String name) {
-        userRepository.findByEmail(name)
-                .ifPresentOrElse(
-                        user -> user.updateRefreshToken(refreshToken),
-                        () -> new Exception("일치하는 회원이 없습니다.")
-                );
+        Optional<User> optionalUser = userRepository.findByRefreshToken(refreshToken);
+        if (optionalUser.isPresent()) {
+            User user = optionalUser.get();
+            user.updateRefreshToken(refreshToken);
+            userRepository.save(user);
+        } else {
+            new Exception("일치하는 회원이 없습니다.");
+        }
     }
 
     /**
