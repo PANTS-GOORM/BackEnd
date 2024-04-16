@@ -6,12 +6,14 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
 @Component
+@Qualifier("jwtTokenValidatorFilter")
 @RequiredArgsConstructor
 public class JwtTokenValidatorFilter extends OncePerRequestFilter {
 
@@ -33,7 +35,6 @@ public class JwtTokenValidatorFilter extends OncePerRequestFilter {
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getServletPath();
-        System.out.println(path.startsWith("/login/oauth2") || path.startsWith("/kauth") || "/".equals(path) || "/favicon.ico".equals(path));
         return path.startsWith("/login/oauth2") || path.startsWith("/oauth2") || "/".equals(path) || "/favicon.ico".equals(path);
     }
 }

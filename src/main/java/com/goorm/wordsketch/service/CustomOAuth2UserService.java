@@ -4,7 +4,7 @@ import com.goorm.wordsketch.entity.User;
 import com.goorm.wordsketch.entity.UserRole;
 import com.goorm.wordsketch.entity.UserSocialType;
 import com.goorm.wordsketch.repository.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.AllArgsConstructor;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
@@ -19,15 +19,14 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
+@AllArgsConstructor
 @Service
 public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
-    @Autowired
     UserRepository userRepository;
 
     @Override
     public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
-        System.out.println("userRequest = " + userRequest);
 
         OAuth2UserService delegate = new DefaultOAuth2UserService();
         OAuth2User oAuth2User = delegate.loadUser(userRequest);
@@ -38,14 +37,14 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         String email;
         Map<String, Object> response = oAuth2User.getAttributes();
 
-        System.out.println("response = " + response);
-        if (registrationId.equals("github") || registrationId.equals("google")) {
-            email = (String) response.get("url");
+        if (registrationId.equals("github")) {
+            email = (String) response.get("html_url");
         } else if (registrationId.equals("kakao")) {
             Map<String, Object> hash = (Map<String, Object>) response.get("kakao_account");
-            System.out.println("hash = " + hash);
             email = (String) hash.get("email");
-        } else {
+        } else if (registrationId.equals("google")) {
+            email = (String) response.get("email");
+        }else {
             throw new OAuth2AuthenticationException("허용되지 않는 인증입니다.");
         }
 

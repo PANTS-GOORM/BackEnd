@@ -1,9 +1,9 @@
 package com.goorm.wordsketch.config;
 
 import com.goorm.wordsketch.service.CustomOAuth2UserService;
-import com.goorm.wordsketch.util.JwtTokenValidatorFilter;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -16,28 +16,35 @@ import org.springframework.security.web.authentication.AuthenticationSuccessHand
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.filter.OncePerRequestFilter;
 
-import java.util.Arrays;
 import java.util.Collections;
+
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
 
-    @Autowired
-    private CustomOAuth2UserService customOAuth2UserService;
+    private final CustomOAuth2UserService customOAuth2UserService;
+
+    private final AuthenticationSuccessHandler authenticationSuccessHandler;
+
+    private final OncePerRequestFilter oncePerRequestFilter;
+    private final String accessCookie;
+    private final String refreshCookie;
 
     @Autowired
-    private AuthenticationSuccessHandler oauth2LoginSuccessHandler;
-
-    @Autowired
-    private JwtTokenValidatorFilter jwtTokenValidatorFilter;
-
-    @Value("${jwt.access.cookie}")
-    private String accessCookie;
-
-    @Value("${jwt.refresh.cookie}")
-    private String refreshCookie;
+    public SecurityConfig(CustomOAuth2UserService customOAuth2UserService
+            , AuthenticationSuccessHandler authenticationSuccessHandler
+            , @Qualifier("jwtTokenValidatorFilter")OncePerRequestFilter oncePerRequestFilter
+            , @Value("${jwt.access.cookie}") String accessCookie
+            , @Value("${jwt.refresh.cookie}") String refreshCookie) {
+        this.customOAuth2UserService = customOAuth2UserService;
+        this.authenticationSuccessHandler = authenticationSuccessHandler;
+        this.oncePerRequestFilter = oncePerRequestFilter;
+        this.accessCookie = accessCookie;
+        this.refreshCookie = refreshCookie;
+    }
 
     @Bean
     SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http) throws Exception {
@@ -60,7 +67,7 @@ public class SecurityConfig {
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .formLogin(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .addFilterBefore(jwtTokenValidatorFilter, BasicAuthenticationFilter.class)
+                .addFilterBefore(oncePerRequestFilter, BasicAuthenticationFilter.class)
 
                 .authorizeHttpRequests((requests) -> requests
                         .requestMatchers("/", "login/oauth2/**", "/oauth2/**", "favicon.ico").permitAll()
@@ -70,7 +77,7 @@ public class SecurityConfig {
                 .oauth2Login(oauth2 -> oauth2
                         .loginPage("http://localhost:3000/login")
                         .userInfoEndpoint(userInfo -> userInfo.userService(customOAuth2UserService))
-                        .successHandler(oauth2LoginSuccessHandler)
+                        .successHandler(authenticationSuccessHandler)
                 );
         return http.build();
     }

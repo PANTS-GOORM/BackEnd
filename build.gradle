@@ -5,7 +5,7 @@ plugins {
 }
 
 group = 'com.goorm'
-version = '0.1.6-SNAPSHOT'  // main에 merge할 때는 업그레이드 필요!! 버전 체크 필요!!
+version = '0.1.7'  // main에 merge할 때는 업그레이드 필요!! 버전 체크 필요!!
 
 configurations {
     compileOnly {
