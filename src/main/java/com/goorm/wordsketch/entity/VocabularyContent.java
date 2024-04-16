@@ -31,7 +31,7 @@ public class VocabularyContent {
     @JoinColumn(name = "vocabulary", nullable = false)
     private Vocabulary vocabulary;
 
-    @Column(name = "content_url", length = 50, nullable = false, columnDefinition = "VARCHAR(50)")
+    @Column(name = "content_url", length = 255, nullable = false, columnDefinition = "VARCHAR(255)")
     private String contentURL;
 
     @Column(name = "problem_description", length = 300, nullable = false, columnDefinition = "VARCHAR(300)")

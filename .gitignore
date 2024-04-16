@@ -228,3 +228,7 @@ gradle-app.setting
 *.hprof
 
 # End of https://www.toptal.com/developers/gitignore/api/windows,macos,intellij,gradle,java
+
+# Client ID, PW of OAuth2
+src/main/resources/application-oauth2.yml
+src/main/resources/application-jwt.yml
