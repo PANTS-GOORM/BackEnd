@@ -2,6 +2,7 @@ package com.goorm.wordsketch.service;
 
 import com.goorm.wordsketch.dto.AdminWordContent;
 import com.goorm.wordsketch.entity.Vocabulary;
+import com.goorm.wordsketch.entity.VocabularyType;
 import com.goorm.wordsketch.repository.VocabularyRepository;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,5 +24,15 @@ public class AdminService {
         return vocabularyList.stream()
             .map(AdminWordContent::new)
             .toList();
+    }
+
+    public void registWord(AdminWordContent adminWordContent) {
+        Vocabulary vocabulary = Vocabulary.builder()
+            .substance(adminWordContent.getVocabulary())
+            .description(adminWordContent.getDescription())
+            .type(VocabularyType.valueOf(adminWordContent.getType()))
+            .build();
+
+        vocabularyRepository.save(vocabulary);
     }
 }
