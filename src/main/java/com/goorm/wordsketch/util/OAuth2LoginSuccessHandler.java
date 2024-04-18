@@ -9,6 +9,8 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
@@ -18,6 +20,7 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
@@ -28,6 +31,9 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
 
     private final ObjectMapper objectMapper;
 
+    @Value("${spring.security.oauth2.redirect-uri}")
+    private String redirectUrl;
+
     // Todo: 배포하면 url 변경 필요
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
@@ -35,15 +41,25 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
             jwtService.createAccessToken(response, authentication);
             jwtService.createRefreshToken(response, authentication);
 
+            // TODO: 로그 출력
+            log.info("email = " + authentication.getName());
             Optional<User> optionalUser = userRepository.findByEmail(authentication.getName());
+            // TODO: 로그 출력
+            log.info("optionalUser = " + optionalUser);
             if (optionalUser.isPresent()) {
                 User user = optionalUser.get();
+                // TODO: 로그 출력
+                log.info("user = " + user);
                 String userJson = objectMapper.writeValueAsString(user);
                 String encodedUserJson = URLEncoder.encode(userJson, StandardCharsets.UTF_8);
-                response.sendRedirect("http://localhost:3000/login/oauth2/userInfo?user=" + encodedUserJson);
+                // TODO: 로그 출력
+                log.info("redirectUrl = " + redirectUrl);
+                response.sendRedirect(redirectUrl + "?user=" + encodedUserJson);
             } else {
                 String errorMessage = URLEncoder.encode("User not found", StandardCharsets.UTF_8);
-                response.sendRedirect("http://localhost:3000/login/oauth2/userInfo?error=" + errorMessage);
+                // TODO: 로그 출력
+                log.info("redirectUrl = " + redirectUrl);
+                response.sendRedirect(redirectUrl + "?error=" + errorMessage);
             }
         }
 
