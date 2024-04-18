@@ -18,6 +18,7 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+import java.util.Arrays;
 import java.util.Collections;
 
 
@@ -37,7 +38,7 @@ public class SecurityConfig {
     @Autowired
     public SecurityConfig(CustomOAuth2UserService customOAuth2UserService
             , AuthenticationSuccessHandler authenticationSuccessHandler
-            , @Qualifier("jwtTokenValidatorFilter")OncePerRequestFilter oncePerRequestFilter
+            , @Qualifier("jwtTokenValidatorFilter") OncePerRequestFilter oncePerRequestFilter
             , @Value("${jwt.access.cookie}") String accessCookie
             , @Value("${jwt.refresh.cookie}") String refreshCookie
             , @Value("${spring.security.oauth2.login-page}") String loginPage) {
@@ -56,12 +57,10 @@ public class SecurityConfig {
                     @Override
                     public CorsConfiguration getCorsConfiguration(HttpServletRequest request) {
                         CorsConfiguration config = new CorsConfiguration();
-                        config.setAllowedOrigins(Collections.singletonList("http://localhost:3000"));
+                        config.setAllowedOrigins(Arrays.asList("http://localhost:3000", "https://www.wordsketch.site"));
                         config.setAllowedMethods(Collections.singletonList("*"));
                         config.setAllowCredentials(true);
                         config.setAllowedHeaders(Collections.singletonList("*"));
-                        config.setExposedHeaders(Collections.singletonList(accessCookie));
-                        config.setExposedHeaders(Collections.singletonList(refreshCookie));
                         config.setMaxAge(3600L);
                         return config;
                     }
@@ -82,6 +81,7 @@ public class SecurityConfig {
                         .userInfoEndpoint(userInfo -> userInfo.userService(customOAuth2UserService))
                         .successHandler(authenticationSuccessHandler)
                 );
+        System.out.println("customOAuth2UserService = " + customOAuth2UserService);
         return http.build();
     }
 
