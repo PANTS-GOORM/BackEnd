@@ -32,18 +32,21 @@ public class SecurityConfig {
     private final OncePerRequestFilter oncePerRequestFilter;
     private final String accessCookie;
     private final String refreshCookie;
+    private final String loginPage;
 
     @Autowired
     public SecurityConfig(CustomOAuth2UserService customOAuth2UserService
             , AuthenticationSuccessHandler authenticationSuccessHandler
             , @Qualifier("jwtTokenValidatorFilter")OncePerRequestFilter oncePerRequestFilter
             , @Value("${jwt.access.cookie}") String accessCookie
-            , @Value("${jwt.refresh.cookie}") String refreshCookie) {
+            , @Value("${jwt.refresh.cookie}") String refreshCookie
+            , @Value("${spring.security.oauth2.login-page}") String loginPage) {
         this.customOAuth2UserService = customOAuth2UserService;
         this.authenticationSuccessHandler = authenticationSuccessHandler;
         this.oncePerRequestFilter = oncePerRequestFilter;
         this.accessCookie = accessCookie;
         this.refreshCookie = refreshCookie;
+        this.loginPage = loginPage;
     }
 
     @Bean
@@ -75,7 +78,7 @@ public class SecurityConfig {
                         .anyRequest().authenticated())
 
                 .oauth2Login(oauth2 -> oauth2
-                        .loginPage("http://localhost:3000/login")
+                        .loginPage(loginPage)
                         .userInfoEndpoint(userInfo -> userInfo.userService(customOAuth2UserService))
                         .successHandler(authenticationSuccessHandler)
                 );
