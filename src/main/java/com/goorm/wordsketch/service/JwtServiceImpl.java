@@ -12,6 +12,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.CredentialsExpiredException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -28,6 +29,7 @@ import java.util.*;
 @Service
 @RequiredArgsConstructor
 @Getter
+@Slf4j
 public class JwtServiceImpl implements JwtService {
 
     @Value("${jwt.secretKey}")
@@ -119,6 +121,8 @@ public class JwtServiceImpl implements JwtService {
     public void validateAccessToken(HttpServletRequest request, HttpServletResponse response) {
         String jwt = null;
         Cookie[] cookies = request.getCookies();
+        // TODO: 로그 출력
+        log.info("cookies = " + cookies);
         for (Cookie cookie : cookies) {
             if (cookie.getName().equals(accessCookie)) {
                 jwt = cookie.getValue();
