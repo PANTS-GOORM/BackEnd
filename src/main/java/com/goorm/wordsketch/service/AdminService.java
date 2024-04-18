@@ -26,7 +26,11 @@ public class AdminService {
             .toList();
     }
 
-    public void registWord(AdminWordContent adminWordContent) {
+    public boolean registWord(AdminWordContent adminWordContent) {
+        if (vocabularyRepository.existsBySubstance(adminWordContent.getVocabulary())) {
+            return true;
+        }
+
         Vocabulary vocabulary = Vocabulary.builder()
             .substance(adminWordContent.getVocabulary())
             .description(adminWordContent.getDescription())
@@ -34,5 +38,7 @@ public class AdminService {
             .build();
 
         vocabularyRepository.save(vocabulary);
+
+        return false;
     }
 }

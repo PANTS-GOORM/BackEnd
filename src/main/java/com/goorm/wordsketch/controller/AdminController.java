@@ -41,8 +41,11 @@ public class AdminController {
     @PostMapping("/wordregist")
     public ResponseEntity<?> registWord(@RequestBody AdminWordContent adminWordContent) {
         try {
-            adminService.registWord(adminWordContent);
-            return new ResponseEntity<>(null, HttpStatus.OK);
+            boolean isDuplicated = adminService.registWord(adminWordContent);
+            if (isDuplicated) {
+                return new ResponseEntity<>("중복된 어휘입니다.", HttpStatus.CONFLICT);
+            }
+            return new ResponseEntity<>("등록 성공!", HttpStatus.OK);
         } catch (Exception e) {
             return errorHandler.errorMessage(e);
         }
