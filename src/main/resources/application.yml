@@ -33,4 +33,4 @@ logging: # 서버 로그 설정
           descriptor:
             sql: trace # 쿼리의 ?에 어떤 값이 들어가는지 TRACE Log에 값을 보여주는 설정
       springframework:
-        security: DEBUG
+        security: TRACE

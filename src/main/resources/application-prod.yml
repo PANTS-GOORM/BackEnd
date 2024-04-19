@@ -67,4 +67,4 @@ logging:
           descriptor:
             sql: trace
       springframework:
-        security: DEBUG
+        security: TRACE
