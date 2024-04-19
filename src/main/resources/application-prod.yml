@@ -44,6 +44,10 @@ spring:
             token-uri: https://kauth.kakao.com/oauth/token
             user-info-uri: https://kapi.kakao.com/v2/user/me
             user-name-attribute: id
+
+      # 프론트로 리다이렉트
+      login-page: https://www.wordsketch.site
+      redirect-uri: https://www.wordsketch.site/login/oauth2/userinfo
 jwt:
   secretKey: ${JWT_SECRETKEY}
 

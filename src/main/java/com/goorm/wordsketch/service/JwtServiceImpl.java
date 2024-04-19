@@ -12,6 +12,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.CredentialsExpiredException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -28,6 +29,7 @@ import java.util.*;
 @Service
 @RequiredArgsConstructor
 @Getter
+@Slf4j
 public class JwtServiceImpl implements JwtService {
 
     @Value("${jwt.secretKey}")
@@ -119,6 +121,8 @@ public class JwtServiceImpl implements JwtService {
     public void validateAccessToken(HttpServletRequest request, HttpServletResponse response) {
         String jwt = null;
         Cookie[] cookies = request.getCookies();
+        // TODO: 로그 출력
+        log.info("cookies = " + cookies);
         for (Cookie cookie : cookies) {
             if (cookie.getName().equals(accessCookie)) {
                 jwt = cookie.getValue();
@@ -195,11 +199,14 @@ public class JwtServiceImpl implements JwtService {
      * @param name         OAuth2를 사용하기 때문에 사실 email이다. 이를 사용해 DB에서 user를 찾을 수 있음
      */
     public void updateRefreshToken(String refreshToken, String name) {
-        userRepository.findByEmail(name)
-                .ifPresentOrElse(
-                        user -> user.updateRefreshToken(refreshToken),
-                        () -> new Exception("일치하는 회원이 없습니다.")
-                );
+        Optional<User> optionalUser = userRepository.findByEmail(name);
+        if (optionalUser.isPresent()) {
+            User user = optionalUser.get();
+            user.updateRefreshToken(refreshToken);
+            userRepository.save(user);
+        } else {
+            new Exception("일치하는 회원이 없습니다.");
+        }
     }
 
     /**
