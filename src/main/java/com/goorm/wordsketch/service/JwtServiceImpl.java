@@ -161,34 +161,39 @@ public class JwtServiceImpl implements JwtService {
     public void validateRefreshToken(HttpServletRequest request, HttpServletResponse response) {
         String jwt = null;
         Cookie[] cookies = request.getCookies();
-        for (Cookie cookie : cookies) {
-            if (cookie.getName().equals(refreshCookie)) {
-                jwt = cookie.getValue();
+        // 쿠키 배열이 null이면 401 에러를 반환하고 함수를 종료합니다.
+        try {
+            for (Cookie cookie : cookies) {
+                if (cookie.getName().equals(refreshCookie)) {
+                    jwt = cookie.getValue();
+                }
             }
-        }
-        if (jwt != null) {
-            try {
-                SecretKey key = Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8));
+            if (jwt != null) {
+                try {
+                    SecretKey key = Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8));
 
-                Claims claims = Jwts.parser()
-                        .verifyWith(key)
-                        .build()
-                        .parseSignedClaims(jwt)
-                        .getPayload();
-                String username = String.valueOf(claims.get(USERNAME_CLAIM));
-                String authorities = String.valueOf(claims.get(AUTHRITIES_CLAIM));
-                Authentication auth = new UsernamePasswordAuthenticationToken(username, null,
-                        AuthorityUtils.commaSeparatedStringToAuthorityList(authorities));
-                SecurityContextHolder.getContext().setAuthentication(auth);
+                    Claims claims = Jwts.parser()
+                            .verifyWith(key)
+                            .build()
+                            .parseSignedClaims(jwt)
+                            .getPayload();
+                    String username = String.valueOf(claims.get(USERNAME_CLAIM));
+                    String authorities = String.valueOf(claims.get(AUTHRITIES_CLAIM));
+                    Authentication auth = new UsernamePasswordAuthenticationToken(username, null,
+                            AuthorityUtils.commaSeparatedStringToAuthorityList(authorities));
+                    SecurityContextHolder.getContext().setAuthentication(auth);
 
-                reIssueToken(response, jwt);
-            } catch (ExpiredJwtException expiredJwtException) {
-                throw new CredentialsExpiredException("토큰 유효기간 검증에 실패했습니다");
-            } catch (SignatureException signatureException) {
-                throw new SecurityException("토큰 서명 검증에 실패하였습니다");
-            } catch (Exception exception) {
-                throw new RuntimeException("예상하지 못한 오류가 발생했습니다.", exception);
+                    reIssueToken(response, jwt);
+                } catch (ExpiredJwtException expiredJwtException) {
+                    throw new CredentialsExpiredException("토큰 유효기간 검증에 실패했습니다");
+                } catch (SignatureException signatureException) {
+                    throw new SecurityException("토큰 서명 검증에 실패하였습니다");
+                } catch (Exception exception) {
+                    throw new RuntimeException("예상하지 못한 오류가 발생했습니다.", exception);
+                }
             }
+        } catch (NullPointerException e) {
+            throw new NullPointerException("토큰 검증 실패: 토큰이 확인되지 않습니다.");
         }
     }
 
