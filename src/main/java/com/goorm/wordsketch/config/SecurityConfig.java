@@ -31,22 +31,16 @@ public class SecurityConfig {
     private final AuthenticationSuccessHandler authenticationSuccessHandler;
 
     private final OncePerRequestFilter oncePerRequestFilter;
-    private final String accessCookie;
-    private final String refreshCookie;
     private final String loginPage;
 
     @Autowired
     public SecurityConfig(CustomOAuth2UserService customOAuth2UserService
             , AuthenticationSuccessHandler authenticationSuccessHandler
             , @Qualifier("jwtTokenValidatorFilter") OncePerRequestFilter oncePerRequestFilter
-            , @Value("${jwt.access.cookie}") String accessCookie
-            , @Value("${jwt.refresh.cookie}") String refreshCookie
             , @Value("${spring.security.oauth2.login-page}") String loginPage) {
         this.customOAuth2UserService = customOAuth2UserService;
         this.authenticationSuccessHandler = authenticationSuccessHandler;
         this.oncePerRequestFilter = oncePerRequestFilter;
-        this.accessCookie = accessCookie;
-        this.refreshCookie = refreshCookie;
         this.loginPage = loginPage;
     }
 
@@ -73,7 +67,7 @@ public class SecurityConfig {
 
                 .authorizeHttpRequests((requests) -> requests
                         .requestMatchers("/", "login/oauth2/**", "/oauth2/**", "favicon.ico").permitAll()
-                        .requestMatchers("/user").hasRole("User")
+                        .requestMatchers("/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated())
 
                 .oauth2Login(oauth2 -> oauth2
@@ -81,7 +75,6 @@ public class SecurityConfig {
                         .userInfoEndpoint(userInfo -> userInfo.userService(customOAuth2UserService))
                         .successHandler(authenticationSuccessHandler)
                 );
-        System.out.println("customOAuth2UserService = " + customOAuth2UserService);
         return http.build();
     }
 
