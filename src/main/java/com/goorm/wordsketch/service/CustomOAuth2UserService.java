@@ -5,7 +5,6 @@ import com.goorm.wordsketch.entity.UserRole;
 import com.goorm.wordsketch.entity.UserSocialType;
 import com.goorm.wordsketch.repository.UserRepository;
 import lombok.AllArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
@@ -20,7 +19,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-@Slf4j
 @AllArgsConstructor
 @Service
 public class CustomOAuth2UserService extends DefaultOAuth2UserService {
@@ -29,9 +27,6 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
     @Override
     public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
-        // TODO: 로그 출력
-        log.info("인증, 인가는 성공!");
-
         OAuth2UserService delegate = new DefaultOAuth2UserService();
         OAuth2User oAuth2User = delegate.loadUser(userRequest);
 
@@ -48,7 +43,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
             email = (String) hash.get("email");
         } else if (registrationId.equals("google")) {
             email = (String) response.get("email");
-        }else {
+        } else {
             throw new OAuth2AuthenticationException("허용되지 않는 인증입니다.");
         }
 
@@ -96,15 +91,13 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         }
 
         userRepository.save(user);
-        // TODO: 로그 출력
-        log.info("user = " + user);
 
         // oAuth2User의 attributes가 불변객체라 이를 복사하고 email을 추가함.
         Map<String, Object> attributes = new HashMap<>(oAuth2User.getAttributes());
         attributes.put("name", email);
 
         return new DefaultOAuth2User(
-                Collections.singleton(new SimpleGrantedAuthority(user.getRole().toString()))
+                Collections.singleton(new SimpleGrantedAuthority(user.getRole().getKey()))
                 , attributes
                 , "name"
         );
