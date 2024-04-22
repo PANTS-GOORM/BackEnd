@@ -26,6 +26,8 @@ public class JwtTokenValidatorFilter extends OncePerRequestFilter {
      * */
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+        // TODO: 로그 출력
+        log.info("path = " + request.getServletPath());
         jwtService.validateAccessToken(request, response);
 
         filterChain.doFilter(request, response);
@@ -40,6 +42,6 @@ public class JwtTokenValidatorFilter extends OncePerRequestFilter {
         // TODO: 로그 출력
         log.info("path = " + path);
         System.out.println("path = " + path);
-        return path.startsWith("/login/oauth2") || path.startsWith("/oauth2") || "/".equals(path) || "/favicon.ico".equals(path);
+        return path.startsWith("/login/oauth2") || path.startsWith("/oauth2") || "/".equals(path) || "/favicon.ico".equals(path) || "/Public/home/js/check.js".equals(path);
     }
 }
