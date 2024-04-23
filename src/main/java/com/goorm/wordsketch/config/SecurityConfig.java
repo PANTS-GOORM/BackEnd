@@ -66,7 +66,7 @@ public class SecurityConfig {
                 .addFilterBefore(oncePerRequestFilter, BasicAuthenticationFilter.class)
 
                 .authorizeHttpRequests((requests) -> requests
-                        .requestMatchers("/", "login/oauth2/**", "/oauth2/**", "favicon.ico").permitAll()
+                        .requestMatchers("/", "login/oauth2/**","/vocab/**", "/oauth2/**", "favicon.ico").permitAll()
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated())
 
