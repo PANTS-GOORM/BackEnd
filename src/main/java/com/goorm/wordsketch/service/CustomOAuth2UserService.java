@@ -27,6 +27,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
     @Override
     public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
+
         OAuth2UserService delegate = new DefaultOAuth2UserService();
         OAuth2User oAuth2User = delegate.loadUser(userRequest);
 
@@ -37,7 +38,11 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         Map<String, Object> response = oAuth2User.getAttributes();
 
         if (registrationId.equals("github")) {
-            email = (String) response.get("html_url");
+            if (response.get("email") == null) {
+                email = (String) response.get("login");
+            } else {
+                email = (String) response.get("email");
+            }
         } else if (registrationId.equals("kakao")) {
             Map<String, Object> hash = (Map<String, Object>) response.get("kakao_account");
             email = (String) hash.get("email");

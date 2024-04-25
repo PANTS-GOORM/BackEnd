@@ -29,7 +29,6 @@ import java.util.*;
 @Service
 @RequiredArgsConstructor
 @Getter
-@Slf4j
 public class JwtServiceImpl implements JwtService {
 
     @Value("${jwt.secretKey}")
@@ -58,7 +57,6 @@ public class JwtServiceImpl implements JwtService {
     private final String REFRESH_TOKEN_SUBJECT = "RefreshToken";
     private final String USERNAME_CLAIM = "username";
     private final String AUTHRITIES_CLAIM = "authorities";
-    private final String BEARER = "Bearer ";
 
     private final UserRepository userRepository;
 
@@ -78,6 +76,15 @@ public class JwtServiceImpl implements JwtService {
                 .signWith(key).compact();
 
         response.addCookie(createCookie(accessCookie, jwt));
+
+        /*SecretKey key = Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8));
+        String jwt = Jwts.builder().issuer(ISSUER).subject("AdminToken")
+                .claim(USERNAME_CLAIM, "WordSketch@groom.com")
+                .claim(AUTHRITIES_CLAIM, UserRole.ADMIN.getKey())
+                .issuedAt(new Date())
+                .signWith(key).compact();
+
+        response.addCookie(createCookie(accessCookie, jwt));*/
     }
 
     /**
@@ -169,32 +176,37 @@ public class JwtServiceImpl implements JwtService {
     public void validateAccessToken(HttpServletRequest request, HttpServletResponse response) {
         String jwt = null;
         Cookie[] cookies = request.getCookies();
-        for (Cookie cookie : cookies) {
-            if (cookie.getName().equals(accessCookie)) {
-                jwt = cookie.getValue();
-            }
-        }
-        if (jwt != null) {
-            try {
-                SecretKey key = Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8));
 
-                Claims claims = Jwts.parser()
-                        .verifyWith(key)
-                        .build()
-                        .parseSignedClaims(jwt)
-                        .getPayload();
-                String username = String.valueOf(claims.get(USERNAME_CLAIM));
-                String authorities = String.valueOf(claims.get(AUTHRITIES_CLAIM));
-                Authentication auth = new UsernamePasswordAuthenticationToken(username, null,
-                        AuthorityUtils.commaSeparatedStringToAuthorityList(authorities));
-                SecurityContextHolder.getContext().setAuthentication(auth);
-            } catch (ExpiredJwtException expiredJwtException) {
-                validateRefreshToken(request, response);
-            } catch (SignatureException signatureException) {
-                throw new SecurityException("토큰 서명 검증에 실패하였습니다");
-            } catch (Exception exception) {
-                throw new RuntimeException("예상하지 못한 오류가 발생했습니다.", exception);
+        try {
+            for (Cookie cookie : cookies) {
+                if (cookie.getName().equals(accessCookie)) {
+                    jwt = cookie.getValue();
+                }
             }
+            if (jwt != null) {
+                try {
+                    SecretKey key = Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8));
+
+                    Claims claims = Jwts.parser()
+                            .verifyWith(key)
+                            .build()
+                            .parseSignedClaims(jwt)
+                            .getPayload();
+                    String username = String.valueOf(claims.get(USERNAME_CLAIM));
+                    String authorities = String.valueOf(claims.get(AUTHRITIES_CLAIM));
+                    Authentication auth = new UsernamePasswordAuthenticationToken(username, null,
+                            AuthorityUtils.commaSeparatedStringToAuthorityList(authorities));
+                    SecurityContextHolder.getContext().setAuthentication(auth);
+                } catch (ExpiredJwtException expiredJwtException) {
+                    validateRefreshToken(request, response);
+                } catch (SignatureException signatureException) {
+                    throw new SecurityException("토큰 서명 검증에 실패하였습니다");
+                } catch (Exception exception) {
+                    throw new RuntimeException("예상하지 못한 오류가 발생했습니다.", exception);
+                }
+            }
+        } catch (NullPointerException e) {
+            throw new NullPointerException("엑세스토큰 검증 실패: 토큰이 확인되지 않습니다.");
         }
     }
 
@@ -207,7 +219,7 @@ public class JwtServiceImpl implements JwtService {
     public void validateRefreshToken(HttpServletRequest request, HttpServletResponse response) {
         String jwt = null;
         Cookie[] cookies = request.getCookies();
-        // 쿠키 배열이 null이면 401 에러를 반환하고 함수를 종료합니다.
+
         try {
             for (Cookie cookie : cookies) {
                 if (cookie.getName().equals(refreshCookie)) {
@@ -227,7 +239,6 @@ public class JwtServiceImpl implements JwtService {
                     String authorities = String.valueOf(claims.get(AUTHRITIES_CLAIM));
                     Authentication auth = new UsernamePasswordAuthenticationToken(username, null,
                             AuthorityUtils.commaSeparatedStringToAuthorityList(authorities));
-                    auth.setAuthenticated(true);
                     SecurityContextHolder.getContext().setAuthentication(auth);
 
                     reIssueToken(response, jwt);
@@ -240,7 +251,7 @@ public class JwtServiceImpl implements JwtService {
                 }
             }
         } catch (NullPointerException e) {
-            throw new NullPointerException("토큰 검증 실패: 토큰이 확인되지 않습니다.");
+            throw new NullPointerException("리프레쉬토큰 검증 실패: 토큰이 확인되지 않습니다.");
         }
     }
 
@@ -281,7 +292,6 @@ public class JwtServiceImpl implements JwtService {
      * @param key   쿠키의 키
      * @param value 쿠키의 값(AccessToken, RefreshToken이 들어롬)
      * @return Cookie 생성된 쿠키
-     * Todo: 배포하면 serSecure(true); 주석 해제
      */
     public Cookie createCookie(String key, String value) {
         Cookie cookie = new Cookie(key, value);
